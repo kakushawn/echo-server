@@ -7,6 +7,8 @@
 #include <cstring>
 #include <iostream>
 
+#define LINE_LENGTH_LIMIT 1024
+
 int main() {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
@@ -24,9 +26,13 @@ int main() {
         std::cerr << "errno: " << errno << std::endl;
         exit(1);
     }
+    std::cerr << "Connected.\n";
 
     /* send */
-    char *msg = "Ground control to Major Tom.";
+    // char *msg = "Ground control to Major Tom.";
+    // if (send(sockfd, msg, strlen(msg), 0) < 0) {
+    char msg[LINE_LENGTH_LIMIT] = {0};
+    std::cin.getline(msg, LINE_LENGTH_LIMIT);
     if (send(sockfd, msg, strlen(msg), 0) < 0) {
         std::cerr << "Cannot send message.\n";
         std::cerr << "errno: " << errno << std::endl;
@@ -43,7 +49,7 @@ int main() {
     std::cerr << "Message from server:\n";
     std::cerr << buff << std::endl;
 
-    std::cerr << "Shut down.\n";
+    std::cerr << "Shut down client.\n";
     close(sockfd);
 
     return 0;
