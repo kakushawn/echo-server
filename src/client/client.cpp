@@ -9,7 +9,7 @@
 
 #define LINE_LENGTH_LIMIT 1024
 
-int main() {
+int main(int argc, char **argv) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         std::cerr << "Cannot create socket.\n";
@@ -32,7 +32,16 @@ int main() {
     // char *msg = "Ground control to Major Tom.";
     // if (send(sockfd, msg, strlen(msg), 0) < 0) {
     char msg[LINE_LENGTH_LIMIT] = {0};
-    std::cin.getline(msg, LINE_LENGTH_LIMIT);
+    if (argc==1) {
+        std::cin.getline(msg, LINE_LENGTH_LIMIT);
+    } else {
+        unsigned int c = 0;
+        while(c<1023 && argv[1][c] != '\0') {
+            msg[c] = argv[1][c];
+            ++c;
+        }
+        msg[c] = '\0';
+    }
     if (send(sockfd, msg, strlen(msg), 0) < 0) {
         std::cerr << "Cannot send message.\n";
         std::cerr << "errno: " << errno << std::endl;
@@ -46,8 +55,7 @@ int main() {
         std::cerr << "errno: " << errno << std::endl;
         exit(1);
     }
-    std::cerr << "Message from server:\n";
-    std::cerr << buff << std::endl;
+    std::cerr << "Message from server: " << buff << std::endl;
 
     std::cerr << "Shut down client.\n";
     close(sockfd);
