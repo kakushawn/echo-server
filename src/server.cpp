@@ -25,23 +25,27 @@ int main() {
         .sin_port = htons(9002),
         .sin_addr = INADDR_ANY};
 
-    socklen_t sock_len = sizeof(addr);
-    if (bind(sockfd, (struct sockaddr*)&addr, sock_len) < 0) {
+    if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
         std::cerr << "Cannot bind.\n";
         std::cerr << "errno: " << errno << std::endl;
         return 1;
     }
 
     std::cerr << "listening:\n";
-    if (listen(sockfd, 20) == -1) {
+    int backlog = 20;
+    if (listen(sockfd, backlog) == -1) {
         std::cerr << "I am deaf.\n";
         return 1;
     }
 
     std::cerr << "accepting:\n";
-    int sockfd2 = accept(sockfd, (struct sockaddr*)&addr, &sock_len);
+    struct sockaddr_storage their_addr;
+    socklen_t talen = sizeof(their_addr);
+    int sockfd2 = accept(sockfd, (struct sockaddr*)&their_addr, &talen);
+    // std::cerr << "addr.sin"
 
     /* receive */
+    std::cerr << "receiving:\n";
     char buff[1024] = {0};
     recv(sockfd2, buff, 1024, 0);
     std::cerr << "message from client:\n";

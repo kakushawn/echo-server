@@ -19,15 +19,13 @@ int main() {
         .sin_port = htons(9002),
         .sin_addr = INADDR_ANY};
 
-    if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+    if (connect(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         std::cerr << "Cannot connect.\n";
         std::cerr << "errno: " << errno << std::endl;
         exit(1);
     }
 
     /* send */
-    // std::string msg = "Ground control to Major Tom.";
-    // if (send(sockfd, msg.c_str(), msg.size(), 0) < 0) {
     char *msg = "Ground control to Major Tom.";
     if (send(sockfd, msg, strlen(msg), 0) < 0) {
         std::cerr << "Cannot send message.\n";
