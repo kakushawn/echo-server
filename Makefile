@@ -9,7 +9,7 @@ all: server client
 server: $(BIN)/server
 
 $(BIN)/server: $(SOURCE)server.cpp
-	$(CC) $< -Wall --std=c++11 -o $@ $(LIBS)
+	$(CC) $< -Wall --std=c++11 -o $@
 
 client: $(BIN)/client
 
