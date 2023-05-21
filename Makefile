@@ -17,4 +17,4 @@ $(BIN)/client: $(SOURCE)client.cpp
 	$(CC) $< -Wall --std=c++11 -o $@
 
 clean:
-	rm -f server client
+	rm -rf $(BIN)
