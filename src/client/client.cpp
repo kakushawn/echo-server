@@ -12,7 +12,7 @@
 int main(int argc, char **argv) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        std::cerr << "Cannot create socket.\n";
+        std::cout << "Cannot create socket.\n";
         exit(1);
     }
 
@@ -22,15 +22,13 @@ int main(int argc, char **argv) {
         .sin_addr = INADDR_ANY};
 
     if (connect(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        std::cerr << "Cannot connect.\n";
-        std::cerr << "errno: " << errno << std::endl;
+        std::cout << "Cannot connect.\n";
+        std::cout << "errno: " << errno << std::endl;
         exit(1);
     }
-    std::cerr << "Connected.\n";
+    std::cout << "Connected.\n";
 
     /* send */
-    // char *msg = "Ground control to Major Tom.";
-    // if (send(sockfd, msg, strlen(msg), 0) < 0) {
     char msg[LINE_LENGTH_LIMIT] = {0};
     if (argc==1) {
         std::cin.getline(msg, LINE_LENGTH_LIMIT);
@@ -43,21 +41,21 @@ int main(int argc, char **argv) {
         msg[c] = '\0';
     }
     if (send(sockfd, msg, strlen(msg), 0) < 0) {
-        std::cerr << "Cannot send message.\n";
-        std::cerr << "errno: " << errno << std::endl;
+        std::cout << "Cannot send message.\n";
+        std::cout << "errno: " << errno << std::endl;
         exit(1);
     }
 
     /* receive */
     char buff[1024] = {0};
     if (recv(sockfd, &buff, 1024, 0) < 0) {
-        std::cerr << "Cannot receive message.\n";
-        std::cerr << "errno: " << errno << std::endl;
+        std::cout << "Cannot receive message.\n";
+        std::cout << "errno: " << errno << std::endl;
         exit(1);
     }
-    std::cerr << "Message from server: " << buff << std::endl;
+    std::cout << "Message from server: " << buff << std::endl;
 
-    std::cerr << "Shut down client.\n";
+    std::cout << "Shut down client.\n";
     close(sockfd);
 
     return 0;
