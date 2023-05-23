@@ -6,15 +6,15 @@ SOURCE=./src/
 
 all: server client
 
-server: $(BIN)/server
+server: $(BIN)server
 
-$(BIN)/server: $(SOURCE)/server/server.cpp
+$(BIN)server: $(SOURCE)/server/server.cpp
 	$(CC) $< -Wall --std=c++11 -o $@
 
-client: $(BIN)/client
+client: $(BIN)client
 
-$(BIN)/client: $(SOURCE)/client/client.cpp
+$(BIN)client: $(SOURCE)/client/client.cpp
 	$(CC) $< -Wall --std=c++11 -o $@
 
 clean:
-	rm -rf $(BIN)
+	rm -rf $(BIN)*
