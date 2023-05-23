@@ -75,12 +75,14 @@ private:
     unsigned int id;
 	unsigned int buff_size;
 	unsigned int back_log;
+
     void ErrorLog(const char *step)
     {
         std::cout << "Failed at " << step;
         std::cout << ". errno: " << errno;
         std::cout << " id: " << id << std::endl;
     }
+
 	void Echo(int sockfd_client) {
 		char buff[buff_size] = {0};
 		if (recv(sockfd_client, buff, buff_size, 0) < 0) {
