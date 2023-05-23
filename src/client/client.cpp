@@ -7,57 +7,77 @@
 #include <cstring>
 #include <iostream>
 
+#define PORT 9002
 #define BUFF_SIZE 1024
+
+class Client
+{
+public:
+    Client()
+    {
+        sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0) {
+            ErrorLog("socket creation");
+            return;
+        }
+
+        struct sockaddr_in addr = {
+            .sin_family = AF_INET,
+            .sin_port = htons(PORT),
+            .sin_addr = INADDR_ANY};
+        if (connect(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+            ErrorLog("connet");
+            return;
+        }
+    }
+
+    void ToServer(const std::string &msg)
+    {
+        if (send(sockfd, msg.c_str(), msg.length(), 0) < 0) {
+            ErrorLog("send");
+            return;
+        }
+
+        char buff[1024] = {0};
+        if (recv(sockfd, &buff, 1024, 0) < 0) {
+            ErrorLog("recv");
+            return;
+        }
+        std::cout << "Message from server: " << buff << std::endl;
+    }
+
+    ~Client()
+    {
+        close(sockfd);
+        std::cout << "Socket closed." << std::endl;
+    }
+
+private:
+    int port;
+    int sockfd;
+    void ErrorLog(const char *step)
+    {
+        std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
+    }
+};
 
 int main(int argc, char **argv)
 {
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) {
-        std::cout << "Cannot create socket.\n";
-        exit(1);
+    if (argc > 2) {
+        std::cout << "Invalid argument." << std::endl;
+        return 1;
     }
 
-    struct sockaddr_in addr = {
-        .sin_family = AF_INET,
-        .sin_port = htons(9002),
-        .sin_addr = INADDR_ANY};
-
-    if (connect(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        std::cout << "Cannot connect.\n";
-        std::cout << "errno: " << errno << std::endl;
-        exit(1);
-    }
-    std::cout << "Connected.\n";
-
-    /* send */
-    char msg[BUFF_SIZE] = {0};
+	std::string msg;
     if (argc == 1) {
-        std::cin.getline(msg, BUFF_SIZE);
+   		std::getline(std::cin, msg);
     } else {
-        unsigned int c = 0;
-        while (c < 1023 && argv[1][c] != '\0') {
-            msg[c] = argv[1][c];
-            ++c;
-        }
-        msg[c] = '\0';
-    }
-    if (send(sockfd, msg, strlen(msg), 0) < 0) {
-        std::cout << "Cannot send message.\n";
-        std::cout << "errno: " << errno << std::endl;
-        exit(1);
+		msg = argv[1];
     }
 
-    /* receive */
-    char buff[1024] = {0};
-    if (recv(sockfd, &buff, 1024, 0) < 0) {
-        std::cout << "Cannot receive message.\n";
-        std::cout << "errno: " << errno << std::endl;
-        exit(1);
-    }
-    std::cout << "Message from server: " << buff << std::endl;
+    Client client;
 
-    std::cout << "Shut down client.\n";
-    close(sockfd);
+    client.ToServer(msg);
 
     return 0;
 }
