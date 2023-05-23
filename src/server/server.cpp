@@ -19,20 +19,20 @@ public:
     Server()
     {
         id = 0;
-		buff_size = BUFF_SIZE;
-		back_log = BACKLOG;
+        buff_size = BUFF_SIZE;
+        back_log = BACKLOG;
 
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd < 0) {
             ErrorLog("socket creation");
-            exit(1);
+            return;
         }
 
         int opt = 1;
         if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
                        sizeof(opt)) < 0) {
             ErrorLog("socket option setting");
-            exit(1);
+            return;
         }
 
         struct sockaddr_in addr = {
@@ -41,12 +41,12 @@ public:
             .sin_addr = INADDR_ANY};
         if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
             ErrorLog("binding");
-            exit(1);
+            return;
         }
 
         if (listen(sockfd, 1) == -1) {
             ErrorLog("listening");
-            exit(1);
+            return;
         }
     }
 
@@ -54,27 +54,41 @@ public:
     {
         struct sockaddr_storage client_addr;
         socklen_t client_addr_len = sizeof(client_addr);
-        int sockfd_client;
         while (1) {
             ++id;
 
-            sockfd_client = accept(sockfd, (struct sockaddr *)&client_addr, &client_addr_len);
+            int sockfd_client = accept(sockfd, (struct sockaddr *)&client_addr, &client_addr_len);
             if (sockfd_client < 0) {
                 ErrorLog("accepting");
                 break;
             }
 
-			Echo(sockfd_client);
+            char buff[buff_size] = {0};
+            if (recv(sockfd_client, buff, buff_size, 0) < 0) {
+                ErrorLog("receiving");
+            } else {
+                std::cout << "[" << id << "]: message from client: " << buff << std::endl;
+                std::string response(buff);
+                if (send(sockfd_client, response.c_str(), response.size(), 0) < 0) {
+                    ErrorLog("sending");
+                    std::cout << "[" << id << "]: Could not send message. errno: " << errno << std::endl;
+                }
+            }
 
             close(sockfd_client);
         }
     }
 
+	~Server()
+	{
+		close(sockfd);
+	}
+
 private:
     int sockfd;
     unsigned int id;
-	unsigned int buff_size;
-	unsigned int back_log;
+    unsigned int buff_size;
+    unsigned int back_log;
 
     void ErrorLog(const char *step)
     {
@@ -82,20 +96,6 @@ private:
         std::cout << ". errno: " << errno;
         std::cout << " id: " << id << std::endl;
     }
-
-	void Echo(int sockfd_client) {
-		char buff[buff_size] = {0};
-		if (recv(sockfd_client, buff, buff_size, 0) < 0) {
-			ErrorLog("receiving");
-		} else {
-			std::cout << "[" << id << "]: message from client: " << buff << std::endl;
-			std::string response(buff);
-			if (send(sockfd_client, response.c_str(), response.size(), 0) < 0) {
-				ErrorLog("sending");
-				std::cout << "[" << id << "]: Could not send message. errno: " << errno << std::endl;
-			}
-		}
-	}
 };
 
 int main()

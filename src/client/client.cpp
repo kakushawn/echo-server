@@ -15,18 +15,20 @@ class Client
 public:
     Client()
     {
-        sockfd = socket(AF_INET, SOCK_STREAM, 0);
-        if (sockfd < 0) {
-            ErrorLog("socket creation");
-            return;
-        }
+		port = PORT;
+		buff_size = BUFF_SIZE;
     }
 
     void ToServer(const std::string &msg)
     {
+        int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0) {
+            ErrorLog("socket creation");
+            return;
+        }
         struct sockaddr_in addr = {
             .sin_family = AF_INET,
-            .sin_port = htons(PORT),
+            .sin_port = htons(port),
             .sin_addr = INADDR_ANY};
         if (connect(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
             ErrorLog("connet");
@@ -38,22 +40,18 @@ public:
             return;
         }
 
-        char buff[1024] = {0};
-        if (recv(sockfd, &buff, 1024, 0) < 0) {
+        char buff[buff_size] = {0};
+        if (recv(sockfd, &buff, buff_size, 0) < 0) {
             ErrorLog("recv");
             return;
         }
         std::cout << "Message from server: " << buff << std::endl;
-    }
-
-    ~Client()
-    {
         close(sockfd);
     }
 
 private:
-    int port;
-    int sockfd;
+    unsigned int port;
+	unsigned int buff_size;
     void ErrorLog(const char *step)
     {
         std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
@@ -67,6 +65,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+	// Read message
 	std::string msg;
     if (argc == 1) {
    		std::getline(std::cin, msg);
