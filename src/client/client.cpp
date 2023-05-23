@@ -20,7 +20,10 @@ public:
             ErrorLog("socket creation");
             return;
         }
+    }
 
+    void ToServer(const std::string &msg)
+    {
         struct sockaddr_in addr = {
             .sin_family = AF_INET,
             .sin_port = htons(PORT),
@@ -29,10 +32,7 @@ public:
             ErrorLog("connet");
             return;
         }
-    }
 
-    void ToServer(const std::string &msg)
-    {
         if (send(sockfd, msg.c_str(), msg.length(), 0) < 0) {
             ErrorLog("send");
             return;
@@ -49,7 +49,6 @@ public:
     ~Client()
     {
         close(sockfd);
-        std::cout << "Socket closed." << std::endl;
     }
 
 private:
