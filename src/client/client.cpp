@@ -7,7 +7,7 @@
 #include <cstring>
 #include <iostream>
 
-#define LINE_LENGTH_LIMIT 1024
+#define BUFF_SIZE 1024
 
 int main(int argc, char **argv)
 {
@@ -30,9 +30,9 @@ int main(int argc, char **argv)
     std::cout << "Connected.\n";
 
     /* send */
-    char msg[LINE_LENGTH_LIMIT] = {0};
+    char msg[BUFF_SIZE] = {0};
     if (argc == 1) {
-        std::cin.getline(msg, LINE_LENGTH_LIMIT);
+        std::cin.getline(msg, BUFF_SIZE);
     } else {
         unsigned int c = 0;
         while (c < 1023 && argv[1][c] != '\0') {
