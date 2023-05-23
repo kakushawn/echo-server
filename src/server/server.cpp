@@ -88,8 +88,7 @@ private:
 		if (recv(sockfd_client, buff, buff_size, 0) < 0) {
 			ErrorLog("receiving");
 		} else {
-			std::cout << "[" << id << "]:";
-			std::cout << " message from client: " << buff << std::endl;
+			std::cout << "[" << id << "]: message from client: " << buff << std::endl;
 			std::string response(buff);
 			if (send(sockfd_client, response.c_str(), response.size(), 0) < 0) {
 				ErrorLog("sending");
