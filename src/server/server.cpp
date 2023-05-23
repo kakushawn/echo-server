@@ -64,18 +64,7 @@ public:
                 break;
             }
 
-            char buff[buff_size] = {0};
-            if (recv(sockfd_client, buff, buff_size, 0) < 0) {
-                ErrorLog("receiving");
-            } else {
-                std::cout << "[" << id << "]:";
-				std::cout << " message from client: " << buff << std::endl;
-                std::string response(buff);
-                if (send(sockfd_client, response.c_str(), response.size(), 0) < 0) {
-                    ErrorLog("sending");
-                    std::cout << "[" << id << "]: Could not send message. errno: " << errno << std::endl;
-                }
-            }
+			Echo(sockfd_client);
 
             close(sockfd_client);
         }
@@ -92,6 +81,20 @@ private:
         std::cout << ". errno: " << errno;
         std::cout << " id: " << id << std::endl;
     }
+	void Echo(int sockfd_client) {
+		char buff[buff_size] = {0};
+		if (recv(sockfd_client, buff, buff_size, 0) < 0) {
+			ErrorLog("receiving");
+		} else {
+			std::cout << "[" << id << "]:";
+			std::cout << " message from client: " << buff << std::endl;
+			std::string response(buff);
+			if (send(sockfd_client, response.c_str(), response.size(), 0) < 0) {
+				ErrorLog("sending");
+				std::cout << "[" << id << "]: Could not send message. errno: " << errno << std::endl;
+			}
+		}
+	}
 };
 
 int main()
