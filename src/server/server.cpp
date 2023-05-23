@@ -18,6 +18,10 @@ class Server
 public:
     Server()
     {
+        id = 0;
+		buff_size = BUFF_SIZE;
+		back_log = BACKLOG;
+
         sockfd = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd < 0) {
             ErrorLog("socket creation");
@@ -44,10 +48,6 @@ public:
             ErrorLog("listening");
             exit(1);
         }
-
-        id = 0;
-		buff_size = BUFF_SIZE;
-		back_log = BACKLOG;
     }
 
     void Run()
@@ -64,8 +64,8 @@ public:
                 break;
             }
 
-            char buff[BUFF_SIZE] = {0};
-            if (recv(sockfd_client, buff, BUFF_SIZE, 0) < 0) {
+            char buff[buff_size] = {0};
+            if (recv(sockfd_client, buff, buff_size, 0) < 0) {
                 ErrorLog("receiving");
             } else {
                 std::cout << "[" << id << "]:";
@@ -83,9 +83,9 @@ public:
 
 private:
     int sockfd;
-    int id;
-	unsigned buff_size;
-	unsigned back_log;
+    unsigned int id;
+	unsigned int buff_size;
+	unsigned int back_log;
     void ErrorLog(const char *step)
     {
         std::cout << "Failed at " << step;
