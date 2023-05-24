@@ -1,20 +1,22 @@
 .PHONY: all
 
-CC=g++
-BIN=./bin/
-SOURCE=./src/
+CPP = g++
+BIN = ./bin/
+LIBS = ./lib/
+INCLUDE = ./include/
+CFLAGS = -Wall -Werror -Wmissing-prototypes
 
 all: server client
 
 server: $(BIN)server
 
-$(BIN)server: $(SOURCE)server/server.cpp
-	$(CC) $< -Wall --std=c++11 -o $@
+$(BIN)server: $(LIBS)/server.cpp
+	$(CPP) $< -Wall --std=c++11 -o $@ -I$(INCLUDE)
 
 client: $(BIN)client
 
-$(BIN)client: $(SOURCE)client/client.cpp
-	$(CC) $< -Wall --std=c++11 -o $@
+$(BIN)client: $(LIBS)/client.cpp
+	$(CPP) $< -Wall --std=c++11 -o $@ -I$(INCLUDE)
 
 clean:
-	rm -rf $(BIN)*
+	rm -f $(BIN)/server $(BIN)/client
