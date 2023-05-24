@@ -4,20 +4,24 @@
 class Server
 {
 public:
-    Server();
+    Server(int port = 9002, int backlog = 10, int buff_size = 1024);
 
-	// Setting up server socket.
-	int Init();
+    // Setting up server socket.
+    int Init();
 
-	// A simple worker that waits connection and echo, 
-	// and runs in a single thread.
-	void Run();
+    // A simple worker that waits connection and echo,
+    // and runs in a single thread.
+    void Run();
 
 private:
     int sock_fd;
+    int port;
+    int backlog;
+    int buff_size;
     unsigned int connection_id;
 
-    void ErrorLog(const char *step) ;
+	// Show log given a step string
+    void ErrorLog(const char *step);
 };
 
 #endif

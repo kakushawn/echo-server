@@ -1,21 +1,16 @@
+#include "client.h"
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
 
-#include <cstring>
 #include <iostream>
 
-#include "client.h"
-
-#define PORT 9002
-#define BUFF_SIZE 1024
-
-Client::Client()
+Client::Client(int port, int buff_size)
+    : port(port),
+      buff_size(buff_size)
 {
-    port = PORT;
-    buff_size = BUFF_SIZE;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         ErrorLog("socket creation");
@@ -52,4 +47,3 @@ void Client::ErrorLog(const char *step)
 {
     std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
 }
-
