@@ -16,15 +16,15 @@
 #define BUFF_SIZE 1024
 
 
-// 2. separate implementation and abstraction
-// 7. man send/recv to verify that recv/send should check buff size sent
+// 2 man send/recv to verify that recv/send check buff size sent
 
-// 4. enum error code
-// 8. see ABM logger (ErrorLog)
-// 6. conn_id not thread safe
+// 3 argument list for error log
+// 4 enum error code
+// 5 see ABM logger (ErrorLog)
+// 6 conn_id not thread safe
 
-// 10. consistency (keep in mind)
-// 99. socket knowledge (api behaviour, e.g. bind, setsockopt)
+// 7. consistency (keep in mind)
+// 8. socket knowledge (api behaviour, e.g. bind, setsockopt)
 
 
 Server::Server()
@@ -65,9 +65,6 @@ int Server::Init()
 	return 0;
 }
 
-	
-// A simple worker that waits connection and echo, 
-// and runs in a single thread.
 void Server::Run()
 {
 	while (1) {
@@ -97,7 +94,7 @@ void Server::Run()
 	close(sock_fd);
 }
 
-void Server::ErrorLog(const char *step) // argument list
+void Server::ErrorLog(const char *step)
 {
 	std::cout << "Failed at " << step;
 	std::cout << ". errno: " << errno;
