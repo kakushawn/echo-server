@@ -8,17 +8,14 @@ CPPFLAGS = -Wall -Werror --std=c++11
 
 all: server client
 
-server: $(LIB)libserver.so
-	$(CPP) $(BIN)serve.cpp ${CPPFLAGS} -o $(BIN)serve -lserver -I$(INCLUDE) -L$(LIB)
-
-$(LIB)libserver.so: $(LIB)server.cpp
+$(LIB)libcommon.so: $(LIB)common.cpp
 	$(CPP) --shared -fPIC ${CPPFLAGS} -c $< -o $@ -I$(INCLUDE)
 
-client: $(LIB)libclient.so
-	$(CPP) $(BIN)echo.cpp ${CPPFLAGS} -o $(BIN)echo -lclient -I$(INCLUDE) -L$(LIB)
+server: $(LIB)libcommon.so
+	$(CPP) $(BIN)server.cpp $(LIB)server.cpp ${CPPFLAGS} -o $(BIN)server -lcommon -I$(INCLUDE) -L$(LIB)
 
-$(LIB)libclient.so: $(LIB)/client.cpp
-	$(CPP) --shared -fPIC ${CPPFLAGS} -c $< -o $@ -I$(INCLUDE)
+client: $(LIB)libcommon.so
+	$(CPP) $(BIN)client.cpp $(LIB)client.cpp ${CPPFLAGS} -o $(BIN)client -lcommon -I$(INCLUDE) -L$(LIB)
 
 clean:
-	rm -f $(BIN)/*.o $(BIN)/serve $(BIN)/echo $(LIB)/*.so
+	rm -f $(BIN)/*.o $(BIN)/server $(BIN)/client $(LIB)/*.so

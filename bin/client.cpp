@@ -2,12 +2,17 @@
 
 #include "client.h"
 
-
 int main(int argc, char **argv)
 {
     if (argc > 2) {
         std::cout << "Invalid argument." << std::endl;
         return 1;
+    }
+
+    Client client;
+    if (client.Init() < 0) {
+        std::cout << "Failed to initialize connection." << std::endl;
+		return 1;
     }
 
     // Read message
@@ -18,9 +23,10 @@ int main(int argc, char **argv)
         msg = argv[1];
     }
 
-    Client client;
-
-    client.ToServer(msg);
+    if (client.Echo(msg) < 0) {
+        std::cout << "Error occured when echoing" << std::endl;
+		return 1;
+    }
 
     return 0;
 }

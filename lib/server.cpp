@@ -9,19 +9,15 @@
 #include <cstring>
 #include <iostream>
 
-// 2 man send/recv to verify that recv/send check buff size sent
-// 3 argument list for error log
-// 4 enum error code
+#include "common.h"
 
-Server::Server(int port, int backlog, int buff_size)
-    : port(port),
-      backlog(backlog),
-      buff_size(buff_size)
+#define BACKLOG 10
+
+Server::Server(unsigned int port): port(port)
 {
     connection_id = 0;
 }
 
-// Setting up server socket.
 int Server::Init()
 {
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -46,7 +42,7 @@ int Server::Init()
         return -1;
     }
 
-    if (listen(sock_fd, backlog) == -1) {
+    if (listen(sock_fd, BACKLOG) == -1) {
         ErrorLog("listening");
         return -1;
     }
@@ -56,7 +52,7 @@ int Server::Init()
 
 void Server::Run()
 {
-    while (1) {
+    while (true) {
         ++connection_id;
 
         struct sockaddr_storage client_addr;
@@ -64,19 +60,22 @@ void Server::Run()
         int sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len);
         if (sock_fd_client < 0) {
             ErrorLog("accepting");
+        	close(sock_fd_client);
             break;
         }
 
-        char buff[buff_size] = {0};
-        if (recv(sock_fd_client, buff, buff_size, 0) < 0) {
-            ErrorLog("receiving");
-        } else {
-            std::cout << "[" << connection_id << "]: message from client: " << buff << std::endl;
-            std::string response(buff);
-            if (send(sock_fd_client, response.c_str(), response.size(), 0) < 0) {
-                ErrorLog("sending");
-            }
-        }
+		std::string received;
+		if(SocketReceiveLongMessage(sock_fd_client, received)<0) {
+			ErrorLog("receive");
+		}
+        std::cout << "[" << connection_id << "]: message from client: " << received << std::endl;
+        std::cout << "[" << connection_id << "]: received size: " << received.size() << std::endl;
+
+		if(SocketSendLongMessage(sock_fd_client, received)<0) {
+			ErrorLog("sending");
+		}
+		std::cout << "[" << connection_id << "]: sent message. " << received << std::endl;
+        std::cout << "[" << connection_id << "]: sent message size. " << received.length() << std::endl;
 
         close(sock_fd_client);
     }

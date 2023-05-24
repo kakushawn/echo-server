@@ -4,7 +4,7 @@
 class Server
 {
 public:
-    Server(int port = 9002, int backlog = 10, int buff_size = 1024);
+    Server(unsigned int port = 9002);
 
     // Setting up server socket.
     int Init();
@@ -12,15 +12,13 @@ public:
     // A simple worker that waits connection and echo,
     // and runs in a single thread.
     void Run();
-
 private:
     int sock_fd;
-    int port;
-    int backlog;
-    int buff_size;
+    unsigned int port;
+    unsigned int backlog;
     unsigned int connection_id;
 
-	// Show log given a step string
+    // Show log given a step string
     void ErrorLog(const char *step);
 };
 

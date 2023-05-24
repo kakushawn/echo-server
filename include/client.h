@@ -6,14 +6,14 @@
 class Client
 {
 public:
-    Client(int port = 9002, int buff_size = 1024);
+    Client(unsigned int port=9002);
+	int Init();
     // Send message and show echo from server
-    void ToServer(const std::string &msg);
+    int Echo(const std::string &msg);
 
 private:
     unsigned int port;
-    unsigned int buff_size;
-    int sockfd;
+    int sock_fd;
     void ErrorLog(const char *step);
 };
 
