@@ -68,13 +68,13 @@ void Server::Run()
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
 
-    bool interrupt = false;
     if (sigaction(SIGINT, &sa, NULL) == -1 || sigaction(SIGTERM, &sa, NULL) == -1) {
-        interrupt = true;
 		std::cout << "Cannot install signal handler. Aborted." << std::endl;
+    	close(sock_fd);
+		return;
     }
 
-    while (!interrupt) {
+    while (true) {
         struct sockaddr_storage client_addr;
         socklen_t client_addr_len = sizeof(client_addr);
 
