@@ -3,6 +3,8 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
+#include <iostream>
+
 // Split message into chunks accroding to a given buffer size,
 // and send them chunk by chunk over socket fd
 int SendMessage(int sock_fd, const std::string &message, uint32_t buffer_size)
@@ -48,4 +50,9 @@ int ReceiveMessage(int sock_fd, std::string &message, uint32_t buffer_size)
     }
 
     return 0;
+}
+
+void ErrorLog(const char *step)
+{
+    std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
 }

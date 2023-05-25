@@ -17,8 +17,6 @@ private:
     uint32_t port;
     uint32_t buffer_size;
     uint32_t backlog;
-
-    void ErrorLog(const char *step);
 };
 
 #endif

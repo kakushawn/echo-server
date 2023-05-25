@@ -105,8 +105,3 @@ void Server::Run()
     close(sock_fd);
     std::cout << "Server is closed." << std::endl;
 }
-
-void Server::ErrorLog(const char *step)
-{
-    std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
-}
