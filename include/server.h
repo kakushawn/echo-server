@@ -17,7 +17,6 @@ private:
     uint32_t port;
     uint32_t buffer_size;
     uint32_t backlog;
-    uint32_t connection_id;
 
     // Show log given a step string
     void ErrorLog(const char *step);

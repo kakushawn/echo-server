@@ -13,12 +13,16 @@
 
 #define BACKLOG 10
 
+static void handler(int signum)
+{
+    std::cout << "interruptted. signum: " << signum << std::endl;
+}
+
 Server::Server(uint32_t port, uint32_t buffer_size, uint32_t backlog)
     : port(port),
       buffer_size(buffer_size),
       backlog(backlog)
 {
-    connection_id = 0;
     std::cout << "port: " << port << std::endl;
     std::cout << "buffer_size: " << buffer_size << std::endl;
     std::cout << "backlog: " << backlog << std::endl;
@@ -59,11 +63,21 @@ int Server::Init()
 // A simple server run in a single thread
 void Server::Run()
 {
-    while (true) {
-        ++connection_id;
+    struct sigaction sa;
+    sa.sa_handler = handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
 
+    bool interrupt = false;
+    if (sigaction(SIGINT, &sa, NULL) == -1 || sigaction(SIGTERM, &sa, NULL) == -1) {
+        interrupt = true;
+		std::cout << "Cannot install signal handler. Aborted." << std::endl;
+    }
+
+    while (!interrupt) {
         struct sockaddr_storage client_addr;
         socklen_t client_addr_len = sizeof(client_addr);
+
         int sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len);
         if (sock_fd_client < 0) {
             ErrorLog("accepting");
@@ -77,22 +91,22 @@ void Server::Run()
             close(sock_fd_client);
             continue;
         }
-        std::cout << "[" << connection_id << "]: received message size: " << received.size() << std::endl;
+        std::cout << "received message size: " << received.size() << std::endl;
 
         if (SendMessage(sock_fd_client, received, buffer_size) < 0) {
             ErrorLog("sending");
             close(sock_fd_client);
             continue;
         }
-        std::cout << "[" << connection_id << "]: sent message. size: " << received.length() << std::endl;
+        std::cout << "sent message. size: " << received.length() << std::endl;
 
         close(sock_fd_client);
     }
     close(sock_fd);
+    std::cout << "Server is closed." << std::endl;
 }
 
 void Server::ErrorLog(const char *step)
 {
-    std::cout << "Failed at " << step << ". errno: " << errno;
-    std::cout << " connection_id: " << connection_id << std::endl;
+    std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
 }
