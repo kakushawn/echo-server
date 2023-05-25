@@ -83,19 +83,18 @@ void Server::Run()
         }
 
         std::string received;
-        if (ReceiveMessage(sock_fd_client, received, buffer_size) < 0) {
-            ErrorLog("receive");
-            continue;
-        }
-        std::cout << "received message size: " << received.size() << std::endl;
+        while (ReceiveMessage(sock_fd_client, received, buffer_size) == 0) {
+            std::cout << "received message size: " << received.size() << std::endl;
 
-        if (SendMessage(sock_fd_client, received, buffer_size) < 0) {
-            ErrorLog("sending");
-            continue;
+            if (SendMessage(sock_fd_client, received, buffer_size) < 0) {
+                ErrorLog("sending");
+                break;
+            }
+            std::cout << "sent message. size: " << received.length() << std::endl;
         }
-        std::cout << "sent message. size: " << received.length() << std::endl;
 
         close(sock_fd_client);
+        std::cout << "Connection is closed." << std::endl;
     }
     close(sock_fd);
     std::cout << "Server is closed." << std::endl;

@@ -4,11 +4,6 @@
 
 int main(int argc, char **argv)
 {
-    if (argc > 2) {
-        std::cout << "Invalid argument." << std::endl;
-        return 1;
-    }
-
     Client client;
     if (client.Init() < 0) {
         std::cout << "Failed to initialize connection." << std::endl;
@@ -16,16 +11,18 @@ int main(int argc, char **argv)
     }
 
     // Read message
-    std::string msg;
     if (argc == 1) {
-        std::getline(std::cin, msg);
+        std::string msg;
+        while(std::getline(std::cin, msg))
+        	client.Echo(msg);
     } else {
-        msg = argv[1];
-    }
-
-    if (client.Echo(msg) < 0) {
-        std::cout << "Error occured when echoing" << std::endl;
-        return 1;
+        for (int32_t i = 1; i < argc; ++i) {
+            std::string msg = argv[i];
+            if (client.Echo(msg) < 0) {
+                std::cout << "Error occured when echoing" << std::endl;
+                return 1;
+            }
+        }
     }
 
     return 0;

@@ -41,6 +41,7 @@ int Client::Echo(const std::string &msg)
         return -1;
     }
 
+	std::cout << "receiving msg:" << msg << std::endl;
     std::string echoed;
     if (ReceiveMessage(sock_fd, echoed, buffer_size) < 0) {
         ErrorLog("receiving");
@@ -48,6 +49,10 @@ int Client::Echo(const std::string &msg)
     }
     std::cout << "Message from server: " << echoed << std::endl;
 
-    close(sock_fd);
     return 0;
+}
+
+Client::~Client()
+{
+    close(sock_fd);
 }
