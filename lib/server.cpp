@@ -13,9 +13,15 @@
 
 #define BACKLOG 10
 
-Server::Server(unsigned int port): port(port)
+Server::Server(uint32_t port, uint32_t buffer_size, uint32_t backlog)
+    : port(port),
+      buffer_size(buffer_size),
+      backlog(backlog)
 {
     connection_id = 0;
+    std::cout << "port: " << port << std::endl;
+    std::cout << "buffer_size: " << buffer_size << std::endl;
+    std::cout << "backlog: " << backlog << std::endl;
 }
 
 int Server::Init()
@@ -50,6 +56,7 @@ int Server::Init()
     return 0;
 }
 
+// A simple server run in a single thread
 void Server::Run()
 {
     while (true) {
@@ -60,22 +67,24 @@ void Server::Run()
         int sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len);
         if (sock_fd_client < 0) {
             ErrorLog("accepting");
-        	close(sock_fd_client);
+            close(sock_fd_client);
             break;
         }
 
-		std::string received;
-		if(SocketReceiveLongMessage(sock_fd_client, received)<0) {
-			ErrorLog("receive");
-		}
-        std::cout << "[" << connection_id << "]: message from client: " << received << std::endl;
-        std::cout << "[" << connection_id << "]: received size: " << received.size() << std::endl;
+        std::string received;
+        if (ReceiveMessage(sock_fd_client, received, buffer_size) < 0) {
+            ErrorLog("receive");
+            close(sock_fd_client);
+            continue;
+        }
+        std::cout << "[" << connection_id << "]: received message size: " << received.size() << std::endl;
 
-		if(SocketSendLongMessage(sock_fd_client, received)<0) {
-			ErrorLog("sending");
-		}
-		std::cout << "[" << connection_id << "]: sent message. " << received << std::endl;
-        std::cout << "[" << connection_id << "]: sent message size. " << received.length() << std::endl;
+        if (SendMessage(sock_fd_client, received, buffer_size) < 0) {
+            ErrorLog("sending");
+            close(sock_fd_client);
+            continue;
+        }
+        std::cout << "[" << connection_id << "]: sent message. size: " << received.length() << std::endl;
 
         close(sock_fd_client);
     }
@@ -84,7 +93,6 @@ void Server::Run()
 
 void Server::ErrorLog(const char *step)
 {
-    std::cout << "Failed at " << step;
-    std::cout << ". errno: " << errno;
+    std::cout << "Failed at " << step << ". errno: " << errno;
     std::cout << " connection_id: " << connection_id << std::endl;
 }

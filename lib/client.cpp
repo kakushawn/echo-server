@@ -9,7 +9,9 @@
 
 #include "common.h"
 
-Client::Client(unsigned int port): port(port)
+Client::Client(uint32_t port, uint32_t buffer_size)
+    : port(port),
+      buffer_size(buffer_size)
 {
 }
 
@@ -33,19 +35,19 @@ int Client::Init()
     return 0;
 }
 
+// Send message over socket to server and show the echoed message.
 int Client::Echo(const std::string &msg)
 {
-	if(SocketSendLongMessage(sock_fd, msg)<0) {
-		ErrorLog("sending");
-		return -1;
-	}
-	std::cout << "Sent." << std::endl;
+    if (SendMessage(sock_fd, msg, buffer_size) < 0) {
+        ErrorLog("sending");
+        return -1;
+    }
 
-	std::string echoed;
-	if(SocketReceiveLongMessage(sock_fd, echoed)<0) {
-		ErrorLog("receiving");
-		return -1;
-	}
+    std::string echoed;
+    if (ReceiveMessage(sock_fd, echoed, buffer_size) < 0) {
+        ErrorLog("receiving");
+        return -1;
+    }
     std::cout << "Message from server: " << echoed << std::endl;
 
     close(sock_fd);
