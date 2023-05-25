@@ -11,9 +11,7 @@
 
 Client::Client(uint32_t port, uint32_t buffer_size)
     : port(port),
-      buffer_size(buffer_size)
-{
-}
+      buffer_size(buffer_size) {}
 
 int Client::Init()
 {

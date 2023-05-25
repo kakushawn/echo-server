@@ -11,8 +11,6 @@
 
 #include "common.h"
 
-#define BACKLOG 10
-
 static void handler(int signum)
 {
     std::cout << "interruptted. signum: " << signum << std::endl;
@@ -52,7 +50,7 @@ int Server::Init()
         return -1;
     }
 
-    if (listen(sock_fd, BACKLOG) == -1) {
+    if (listen(sock_fd, backlog) == -1) {
         ErrorLog("listening");
         return -1;
     }
@@ -69,9 +67,9 @@ void Server::Run()
     sa.sa_flags = 0;
 
     if (sigaction(SIGINT, &sa, NULL) == -1 || sigaction(SIGTERM, &sa, NULL) == -1) {
-		std::cout << "Cannot install signal handler. Aborted." << std::endl;
-    	close(sock_fd);
-		return;
+        std::cout << "Cannot install signal handler. Aborted." << std::endl;
+        close(sock_fd);
+        return;
     }
 
     while (true) {
@@ -81,21 +79,18 @@ void Server::Run()
         int sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len);
         if (sock_fd_client < 0) {
             ErrorLog("accepting");
-            close(sock_fd_client);
             break;
         }
 
         std::string received;
         if (ReceiveMessage(sock_fd_client, received, buffer_size) < 0) {
             ErrorLog("receive");
-            close(sock_fd_client);
             continue;
         }
         std::cout << "received message size: " << received.size() << std::endl;
 
         if (SendMessage(sock_fd_client, received, buffer_size) < 0) {
             ErrorLog("sending");
-            close(sock_fd_client);
             continue;
         }
         std::cout << "sent message. size: " << received.length() << std::endl;
