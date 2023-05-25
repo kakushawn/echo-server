@@ -53,8 +53,3 @@ int Client::Echo(const std::string &msg)
     close(sock_fd);
     return 0;
 }
-
-void Client::ErrorLog(const char *step)
-{
-    std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
-}

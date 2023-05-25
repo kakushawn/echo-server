@@ -90,9 +90,3 @@ void Server::Run()
     }
     close(sock_fd);
 }
-
-void Server::ErrorLog(const char *step)
-{
-    std::cout << "Failed at " << step << ". errno: " << errno;
-    std::cout << " connection_id: " << connection_id << std::endl;
-}

@@ -17,7 +17,6 @@ private:
     int sock_fd;
     uint32_t port;
     uint32_t buffer_size;
-    void ErrorLog(const char *step);
 };
 
 #endif
