@@ -18,7 +18,6 @@ private:
     uint32_t buffer_size;
     uint32_t backlog;
 
-    // Show log given a step string
     void ErrorLog(const char *step);
 };
 
