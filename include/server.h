@@ -1,15 +1,13 @@
-#include <cstdint>
-
 #ifndef SERVER_H_
 #define SERVER_H_
+
+#include <cstdint>
 
 class Server
 {
 public:
-    Server(uint32_t port = 9002, uint32_t buffer_size = 8, uint32_t backlog = 10);
-
+    Server(uint32_t port = 9002, uint32_t buffer_size = 16, uint32_t backlog = 10);
     int Init();
-
     void Run();
 
 private:
