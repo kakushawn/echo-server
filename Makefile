@@ -6,7 +6,7 @@ LIB = ./lib/
 INCLUDE = ./include/
 CPPFLAGS = -Wall -Werror --std=c++11
 
-all: server client
+all: server client client2
 
 common: $(LIB)libcommon.so
 
@@ -18,6 +18,8 @@ server: $(LIB)libcommon.so
 
 client: $(LIB)libcommon.so
 	$(CPP) $(BIN)client.cpp $(LIB)client.cpp ${CPPFLAGS} -o $(BIN)client -lcommon -I$(INCLUDE) -L$(LIB)
+client2: $(LIB)libcommon.so
+	$(CPP) $(BIN)client2.cpp $(LIB)client.cpp ${CPPFLAGS} -o $(BIN)client2 -lcommon -I$(INCLUDE) -L$(LIB)
 
 clean:
 	rm -f $(BIN)/*.o $(BIN)/server $(BIN)/client $(LIB)/*.so
