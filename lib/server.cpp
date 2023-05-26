@@ -137,12 +137,10 @@ void Server::RunNonblocking()
                     ErrorLog("accept");
                     continue;
                 }
-
                 if (SetNonblocking(sock_fd_client) < 0) {
                     ErrorLog("SetNonblocking");
                     continue;
                 }
-
                 if (EpollCtlAdd(epoll_fd, sock_fd_client, EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP) < 0) {
                     std::cout << "epoll_ctl: sock_fd_client" << std::endl;
                     continue;
