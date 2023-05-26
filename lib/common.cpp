@@ -109,7 +109,7 @@ int ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer
 	while ((r = read(sock_fd, buffer, buffer_size)) > 0) {
 		message += buffer;
 	}
-    return 0;
+    return errno == EAGAIN;
 }
 
 void ErrorLog(const char *step)
