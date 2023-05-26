@@ -2,6 +2,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -41,13 +42,36 @@ int Client::Echo(const std::string &msg)
         return -1;
     }
 
-	std::cout << "receiving msg:" << msg << std::endl;
+    std::cout << "receiving msg:" << msg << std::endl;
     std::string echoed;
     if (ReceiveMessage(sock_fd, echoed, buffer_size) < 0) {
         ErrorLog("receiving");
         return -1;
     }
     std::cout << "Message from server: " << echoed << std::endl;
+
+    return 0;
+}
+
+int Client::EchoNonblocking(const std::string &msg)
+{
+    SetNonblocking(sock_fd);
+    uint32_t size = msg.size();
+    if (SendMessageNonblocking(sock_fd, msg, size) < 0) {
+        ErrorLog("SendMessageNonblocking");
+        return -1;
+    }
+    std::cout << "receiving msg: " << msg << std::endl;
+    std::string echoed;
+    do {
+        ReceiveMessageNonblocking(sock_fd, echoed, buffer_size);
+    } while (echoed.size() != msg.size() && errno == EAGAIN);
+
+    if (echoed.size() != msg.size()) {
+        ErrorLog("ReceiveMessageNonblocking");
+    } else {
+        std::cout << "Message from server: " << echoed << std::endl;
+    }
 
     return 0;
 }

@@ -2,6 +2,9 @@
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/epoll.h>
 
 #include <iostream>
 
@@ -52,7 +55,64 @@ int ReceiveMessage(int sock_fd, std::string &message, uint32_t buffer_size)
     return 0;
 }
 
+int SetNonblocking(int sock_fd)
+{
+    int result;
+    int flags;
+
+    flags = fcntl(sock_fd, F_GETFL, 0);
+
+    if (flags == -1) {
+        return -1;
+    }
+
+    flags |= O_NONBLOCK;
+
+    result = fcntl(sock_fd, F_SETFL, flags);
+    return result;
+}
+
+int EpollCtlAdd(int epfd, int fd, uint32_t events)
+{
+    struct epoll_event ev;
+    ev.events = events;
+    ev.data.fd = fd;
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+        return -1;
+    }
+    return 0;
+}
+
+int SendMessageNonblocking(int sock_fd, const std::string &message, uint32_t &sending_size)
+{
+    uint32_t total_sent = 0;
+    uint32_t bytes_left = sending_size;
+
+    while (total_sent < sending_size) {
+        int sent = write(sock_fd, message.substr(total_sent, bytes_left).c_str(), bytes_left);
+        if (sent <= 0) {
+            break;
+        }
+        total_sent += sent;
+        bytes_left -= sent;
+    }
+    if (sending_size != total_sent) return -1;
+    sending_size = total_sent;
+    return 0;
+}
+
+int ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer_size)
+{
+    char buffer[buffer_size + 1] = {0};
+    message.clear();
+    int r;
+	while ((r = read(sock_fd, buffer, buffer_size)) > 0) {
+		message += buffer;
+	}
+    return 0;
+}
+
 void ErrorLog(const char *step)
 {
-    std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
+	std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
 }
