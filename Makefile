@@ -8,6 +8,8 @@ CPPFLAGS = -Wall -Werror --std=c++11
 
 all: server client
 
+common: $(LIB)libcommon.so
+
 $(LIB)libcommon.so: $(LIB)common.cpp
 	$(CPP) --shared -fPIC ${CPPFLAGS} -c $< -o $@ -I$(INCLUDE)
 
