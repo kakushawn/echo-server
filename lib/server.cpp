@@ -9,13 +9,21 @@
 
 #include <csignal>
 #include <cstring>
+#include <future>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 #include "common.h"
 
-#define MAX_EVENTS 10
-#define EPOLL_WAIT_TIME_OUT 1000  // ms
+#define MAX_EVENTS 64
+
+struct job_param {
+    int epoll_fd;
+    int sock_fd;
+    uint32_t events;
+    uint32_t buffer_size;
+};
 
 static void SignalHandler(int signum)
 {
@@ -106,64 +114,76 @@ void Server::Run()
     std::cout << "Server is closed." << std::endl;
 }
 
+void run_job(struct job_param param)
+{
+    int sock_fd = param.sock_fd;
+    uint32_t buffer_size = param.buffer_size;
+
+    std::string received_message;
+    ReceiveMessageNonblocking(sock_fd, received_message, buffer_size);
+    std::cout << "received_message: " << received_message << std::endl;
+    if (received_message.size() == 0) {
+        perror("ReceiveMessageNonblocking");
+    } else {
+        uint32_t sending_size = received_message.size();
+        if (SendMessageNonblocking(sock_fd, received_message, sending_size) < 0) {
+            perror("SendMessageNonblocking");
+        }
+    }
+}
+
 void Server::RunNonblocking()
 {
-    int epoll_fd;
-    struct epoll_event events[MAX_EVENTS];
-
-    epoll_fd = epoll_create1(0);
+    int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
-        std::cout << "epoll_create1" << std::endl;
+        perror("epoll_create1");
         return;
     }
-    if (EpollCtlAdd(epoll_fd, sock_fd, EPOLLIN | EPOLLOUT | EPOLLET) == -1) {
-        std::cout << "epoll_ctl: listen_sock" << std::endl;
+    SetNonblocking(sock_fd);
+    if (EpollCtlAdd(epoll_fd, sock_fd, EPOLLIN | EPOLLOUT | EPOLLET) < 0) {
+        perror("epoll_ctl: listen_sock");
         return;
     }
-
+    struct epoll_event events[MAX_EVENTS];
     while (true) {
-        int num_fds = epoll_wait(epoll_fd, events, MAX_EVENTS, EPOLL_WAIT_TIME_OUT);
+        int num_fds = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
         if (num_fds == -1) {
-            ErrorLog("epoll_wait");
+            perror("epoll_wait");
             break;
         }
 
-        for (int i = 0; i < num_fds; ++i) {
-            if (events[i].data.fd == sock_fd) {
+        for (int n = 0; n < num_fds; ++n) {
+            if (events[n].events & (EPOLLRDHUP | EPOLLHUP)) {
+                std::cout << "close fd: " << events[n].data.fd << std::endl;
+                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[n].data.fd, NULL);
+                close(events[n].data.fd);
+                continue;
+            }
+            if (events[n].data.fd == sock_fd) {
+                std::cout << "accepting..." << std::endl;
+                int sock_fd_client;
                 struct sockaddr_storage client_addr;
                 socklen_t client_addr_len = sizeof(client_addr);
-                int sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len);
-                if (sock_fd_client == -1) {
-                    ErrorLog("accept");
-                    continue;
-                }
-                if (SetNonblocking(sock_fd_client) < 0) {
-                    ErrorLog("SetNonblocking");
-                    continue;
-                }
-                if (EpollCtlAdd(epoll_fd, sock_fd_client, EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP) < 0) {
-                    std::cout << "epoll_ctl: sock_fd_client" << std::endl;
-                    continue;
-                }
-            } else if (events[i].events & EPOLLIN) {
-                std::string received_message;
-                if (ReceiveMessageNonblocking(events[i].data.fd, received_message, buffer_size) < 0) {
-                    ErrorLog("ReceiveMessageNonblocking");
-                } else if (received_message.size() == 0) {
-                    std::cout << "client fd " << events[i].data.fd << " hung up." << std::endl;
-                } else {
-                    uint32_t sending_size = received_message.size();
-                    if (SendMessageNonblocking(events[i].data.fd, received_message, sending_size) < 0) {
-                        ErrorLog("SendMessageNonblocking");
+                while ((sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len)) > 0) {
+                    std::cout << "accepted fd:" << sock_fd_client << std::endl;
+                    if (sock_fd_client == -1) {
+                        perror("accept");
+                        break;
+                    }
+                    SetNonblocking(sock_fd_client);
+                    if (EpollCtlAdd(epoll_fd, sock_fd_client, EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP) < 0) {
+                        perror("epoll_ctl: conn_sock");
+                        break;
                     }
                 }
-                if (events[i].events & (EPOLLHUP)) {
-                    std::cout << "client fd: " << events[i].data.fd << " disconnected." << std::endl;
-                    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[i].data.fd, NULL);
-                    close(events[i].data.fd);
-                }
-            } else {
-                std::cout << "Unexcpeted error occured." << std::endl;
+                std::cout << "accept finished" << std::endl;
+            } else if (events[n].events & EPOLLIN) {
+                struct job_param param = {
+                    .sock_fd = events[n].data.fd,
+                    .events = events[n].events,
+                    .buffer_size = buffer_size,
+                };
+                run_job(param);
             }
         }
     }

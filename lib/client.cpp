@@ -30,6 +30,7 @@ int Client::Init()
         ErrorLog("connet");
         return -1;
     }
+    std::cout << "Connected. fd: " << sock_fd << std::endl;
 
     return 0;
 }
@@ -61,8 +62,8 @@ int Client::EchoNonblocking(const std::string &msg)
         ErrorLog("SendMessageNonblocking");
         return -1;
     }
-    std::cout << "receiving msg: " << msg << std::endl;
     std::string echoed;
+    std::cout << "receiving msg: " << msg << std::endl;
     do {
         ReceiveMessageNonblocking(sock_fd, echoed, buffer_size);
     } while (echoed.size() != msg.size() && errno == EAGAIN);

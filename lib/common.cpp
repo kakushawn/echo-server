@@ -1,10 +1,10 @@
 #include "common.h"
 
 #include <arpa/inet.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #include <iostream>
 
@@ -101,18 +101,16 @@ int SendMessageNonblocking(int sock_fd, const std::string &message, uint32_t &se
     return 0;
 }
 
-int ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer_size)
+void ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer_size)
 {
     char buffer[buffer_size + 1] = {0};
     message.clear();
-    int r;
-	while ((r = read(sock_fd, buffer, buffer_size)) > 0) {
-		message += buffer;
-	}
-    return errno == EAGAIN;
+    while ((read(sock_fd, buffer, buffer_size)) > 0) {
+        message += buffer;
+    }
 }
 
 void ErrorLog(const char *step)
 {
-	std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
+    std::cout << "Failed at " << step << ". errno: " << errno << std::endl;
 }
