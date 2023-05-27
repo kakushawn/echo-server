@@ -13,8 +13,9 @@ int main(int argc, char **argv)
     // Read message
     if (argc == 1) {
         std::string msg;
+        std::string echoed;
         while (std::getline(std::cin, msg)) {
-            if(client.EchoNonblocking(msg)<0) {
+            if(client.EchoNonblocking(msg, echoed)<0) {
                 std::cout << "Error occured when echoing" << std::endl;
                 return -1;
             }
@@ -23,7 +24,8 @@ int main(int argc, char **argv)
     } else {
         for (int32_t i = 1; i < argc; ++i) {
             std::string msg = argv[i];
-            if (client.EchoNonblocking(msg) < 0) {
+            std::string echoed;
+            if (client.EchoNonblocking(msg, echoed) < 0) {
                 std::cout << "Error occured when echoing" << std::endl;
                 return -1;
             }

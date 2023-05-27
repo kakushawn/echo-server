@@ -15,15 +15,10 @@
 #include <vector>
 
 #include "common.h"
+#include "thread_pool.h"
 
 #define MAX_EVENTS 64
 
-struct job_param {
-    int epoll_fd;
-    int sock_fd;
-    uint32_t events;
-    uint32_t buffer_size;
-};
 
 static void SignalHandler(int signum)
 {
@@ -114,11 +109,8 @@ void Server::Run()
     std::cout << "Server is closed." << std::endl;
 }
 
-void run_job(struct job_param param)
+void Echo(int sock_fd, uint32_t buffer_size)
 {
-    int sock_fd = param.sock_fd;
-    uint32_t buffer_size = param.buffer_size;
-
     std::string received_message;
     ReceiveMessageNonblocking(sock_fd, received_message, buffer_size);
 
@@ -132,8 +124,12 @@ void run_job(struct job_param param)
     }
 }
 
-void Server::RunNonblocking()
+void Server::RunNonblocking(int num_workers)
 {
+    std::cout << "num_workers: " << num_workers << std::endl;
+    ThreadPool pool(num_workers, Echo);
+    pool.Start();
+
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
         perror("epoll_create1");
@@ -153,13 +149,14 @@ void Server::RunNonblocking()
         }
 
         for (int n = 0; n < num_fds; ++n) {
+            int fd = events[n].data.fd;
             if (events[n].events & (EPOLLRDHUP | EPOLLHUP)) {
                 std::cout << "close fd: " << events[n].data.fd << std::endl;
-                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, events[n].data.fd, NULL);
-                close(events[n].data.fd);
+                epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+                close(fd);
                 continue;
             }
-            if (events[n].data.fd == sock_fd) {
+            if (fd == sock_fd) {
                 int sock_fd_client;
                 struct sockaddr_storage client_addr;
                 socklen_t client_addr_len = sizeof(client_addr);
@@ -176,15 +173,12 @@ void Server::RunNonblocking()
                     std::cout << "accepted fd: " << sock_fd_client << std::endl;
                 }
             } else if (events[n].events & EPOLLIN) {
-                struct job_param param = {
-                    .sock_fd = events[n].data.fd,
-                    .events = events[n].events,
-                    .buffer_size = buffer_size,
-                };
-                run_job(param);
+                // Echo(events[n].data.fd, buffer_size);
+                pool.Push(std::pair<int, uint32_t>(fd, buffer_size));
             }
         }
     }
+    pool.Stop();
     close(epoll_fd);
     std::cout << "epoll_fd is closed." << std::endl;
 }
@@ -194,3 +188,4 @@ Server::~Server()
     close(sock_fd);
     std::cout << "sock_fd is closed." << std::endl;
 }
+

@@ -9,7 +9,7 @@ public:
     Server(uint32_t port = 9002, uint32_t buffer_size = 16, uint32_t backlog = 10);
     int Init();
     void Run();
-    void RunNonblocking();
+    void RunNonblocking(int num_workers = 1);
 	~Server();
 
 private:

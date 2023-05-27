@@ -14,7 +14,9 @@ void run()
 		std::cout << "Failed to initialize connection." << std::endl;
 	}
 	for (int32_t i = 0; i < n; ++i) {
-		if (client.EchoNonblocking("test") < 0) {
+		std::string msg = std::to_string(i);
+		std::string echoed;
+		if (client.EchoNonblocking(msg, echoed) < 0) {
 			perror("EchoNonblocking");
 		}
 	}
