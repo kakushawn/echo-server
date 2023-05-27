@@ -121,13 +121,13 @@ void run_job(struct job_param param)
 
     std::string received_message;
     ReceiveMessageNonblocking(sock_fd, received_message, buffer_size);
-    std::cout << "received_message: " << received_message << std::endl;
+
     if (received_message.size() == 0) {
         perror("ReceiveMessageNonblocking");
     } else {
         uint32_t sending_size = received_message.size();
-        if (SendMessageNonblocking(sock_fd, received_message, sending_size) < 0) {
-            perror("SendMessageNonblocking");
+        if (SendMessage2(sock_fd, received_message, sending_size) < 0) {
+            perror("SendMessage2");
         }
     }
 }
@@ -160,12 +160,10 @@ void Server::RunNonblocking()
                 continue;
             }
             if (events[n].data.fd == sock_fd) {
-                std::cout << "accepting..." << std::endl;
                 int sock_fd_client;
                 struct sockaddr_storage client_addr;
                 socklen_t client_addr_len = sizeof(client_addr);
                 while ((sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len)) > 0) {
-                    std::cout << "accepted fd:" << sock_fd_client << std::endl;
                     if (sock_fd_client == -1) {
                         perror("accept");
                         break;
@@ -176,7 +174,6 @@ void Server::RunNonblocking()
                         break;
                     }
                 }
-                std::cout << "accept finished" << std::endl;
             } else if (events[n].events & EPOLLIN) {
                 struct job_param param = {
                     .sock_fd = events[n].data.fd,
