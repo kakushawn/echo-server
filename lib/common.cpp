@@ -83,7 +83,7 @@ int EpollCtlAdd(int epfd, int fd, uint32_t events)
     return 0;
 }
 
-int SendMessageNonblocking(int sock_fd, const std::string &message, uint32_t &sending_size)
+int SendMessage2(int sock_fd, const std::string &message, uint32_t &sending_size)
 {
     uint32_t total_sent = 0;
     uint32_t bytes_left = sending_size;
@@ -101,13 +101,30 @@ int SendMessageNonblocking(int sock_fd, const std::string &message, uint32_t &se
     return 0;
 }
 
-void ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer_size)
+bool IsNonblocking(int sock_fd)
 {
+    int check;
+    if ((check = fcntl(sock_fd, F_GETFL, 0)) < 0) {
+        perror("fcntl");
+        return -1;
+    }
+    return check & O_NONBLOCK;
+}
+
+int ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer_size)
+{
+    if(!IsNonblocking(sock_fd)) {
+        std::cout << "sock_fd: " << sock_fd << " is not non-blocking." << std::endl;
+        return -1;
+    }
+
     char buffer[buffer_size + 1] = {0};
     message.clear();
     while ((read(sock_fd, buffer, buffer_size)) > 0) {
         message += buffer;
     }
+
+    return 0;
 }
 
 void ErrorLog(const char *step)

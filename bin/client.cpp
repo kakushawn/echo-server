@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv)
 {
-    Client client;
+    Client client(9002, 32);
     if (client.Init() < 0) {
         std::cout << "Failed to initialize connection." << std::endl;
         return 1;
@@ -22,6 +22,7 @@ int main(int argc, char **argv)
                 std::cout << "Error occured when echoing" << std::endl;
                 return 1;
             }
+            std::cout << "echoed: " << msg << std::endl;
         }
     }
 

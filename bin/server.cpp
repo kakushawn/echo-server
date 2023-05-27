@@ -4,7 +4,7 @@
 
 int main()
 {
-    Server server;
+    Server server(9002, 32, 128);
 
     if (server.Init() < 0) {
         std::cout << "Failed to initialize server." << std::endl;
