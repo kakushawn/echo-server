@@ -72,7 +72,6 @@ int Client::EchoNonblocking(const std::string &msg)
     if (echoed.size() != msg.size()) {
         ErrorLog("echoed size");
     }
-
     return 0;
 }
 

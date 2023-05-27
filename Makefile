@@ -13,12 +13,19 @@ common: $(LIB)libcommon.so
 $(LIB)libcommon.so: $(LIB)common.cpp
 	$(CPP) --shared -fPIC ${CPPFLAGS} -c $< -o $@ -I$(INCLUDE)
 
-server: $(LIB)libcommon.so
+server: $(BIN)server
+
+$(BIN)server: $(LIB)libcommon.so $(BIN)server.cpp $(LIB)server.cpp
 	$(CPP) $(BIN)server.cpp $(LIB)server.cpp ${CPPFLAGS} -o $(BIN)server -lcommon -I$(INCLUDE) -L$(LIB)
 
-client: $(LIB)libcommon.so
+client: $(BIN)client
+
+$(BIN)client: $(LIB)libcommon.so $(BIN)client.cpp $(LIB)client.cpp
 	$(CPP) $(BIN)client.cpp $(LIB)client.cpp ${CPPFLAGS} -o $(BIN)client -lcommon -I$(INCLUDE) -L$(LIB)
-client2: $(LIB)libcommon.so
+
+client2: $(BIN)client2
+
+$(BIN)client2: $(LIB)libcommon.so $(BIN)client2.cpp $(LIB)client.cpp
 	$(CPP) $(BIN)client2.cpp $(LIB)client.cpp ${CPPFLAGS} -o $(BIN)client2 -lcommon -I$(INCLUDE) -L$(LIB)
 
 clean:

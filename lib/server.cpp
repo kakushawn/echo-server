@@ -173,6 +173,7 @@ void Server::RunNonblocking()
                         perror("epoll_ctl: conn_sock");
                         break;
                     }
+                    std::cout << "accepted fd: " << sock_fd_client << std::endl;
                 }
             } else if (events[n].events & EPOLLIN) {
                 struct job_param param = {
