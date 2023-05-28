@@ -35,4 +35,4 @@ $(LIB)thread_pool.so: $(LIB)thread_pool.cpp
 	$(CPP) --shared -fPIC ${CPPFLAGS} -c $< -o $@ -I$(INCLUDE)
 
 clean:
-	rm -f $(BIN)/*.o $(BIN)/server $(BIN)/client $(LIB)/*.so
+	rm -f $(BIN)/* $(LIB)/*.so
