@@ -9,16 +9,27 @@
 
 #include <csignal>
 #include <cstring>
-#include <future>
 #include <iostream>
-#include <thread>
-#include <vector>
 
 #include "common.h"
 #include "thread_pool.h"
 
 #define MAX_EVENTS 64
 
+void Respond(int sock_fd, uint32_t buffer_size)
+{
+    std::string received_message;
+    ReceiveMessageNonblocking(sock_fd, received_message, buffer_size);
+
+    if (received_message.size() == 0) {
+        perror("ReceiveMessageNonblocking");
+    } else {
+        uint32_t sending_size = received_message.size();
+        if (SendMessage2(sock_fd, received_message, sending_size) < 0) {
+            perror("SendMessage2");
+        }
+    }
+}
 
 static void SignalHandler(int signum)
 {
@@ -109,25 +120,10 @@ void Server::Run()
     std::cout << "Server is closed." << std::endl;
 }
 
-void Echo(int sock_fd, uint32_t buffer_size)
-{
-    std::string received_message;
-    ReceiveMessageNonblocking(sock_fd, received_message, buffer_size);
-
-    if (received_message.size() == 0) {
-        perror("ReceiveMessageNonblocking");
-    } else {
-        uint32_t sending_size = received_message.size();
-        if (SendMessage2(sock_fd, received_message, sending_size) < 0) {
-            perror("SendMessage2");
-        }
-    }
-}
-
-void Server::RunNonblocking(int num_workers)
+void Server::RunMultiThreaded(int num_workers)
 {
     std::cout << "num_workers: " << num_workers << std::endl;
-    ThreadPool pool(num_workers, Echo);
+    ThreadPool pool(num_workers, Respond);
     pool.Start();
 
     int epoll_fd = epoll_create1(0);
@@ -151,7 +147,7 @@ void Server::RunNonblocking(int num_workers)
         for (int n = 0; n < num_fds; ++n) {
             int fd = events[n].data.fd;
             if (events[n].events & (EPOLLRDHUP | EPOLLHUP)) {
-                std::cout << "close fd: " << events[n].data.fd << std::endl;
+                // std::cout << "close fd: " << events[n].data.fd << std::endl;
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
                 close(fd);
                 continue;
@@ -170,10 +166,9 @@ void Server::RunNonblocking(int num_workers)
                         perror("epoll_ctl: conn_sock");
                         break;
                     }
-                    std::cout << "accepted fd: " << sock_fd_client << std::endl;
+                    // std::cout << "accepted fd: " << sock_fd_client << std::endl;
                 }
             } else if (events[n].events & EPOLLIN) {
-                // Echo(events[n].data.fd, buffer_size);
                 pool.Push(std::pair<int, uint32_t>(fd, buffer_size));
             }
         }

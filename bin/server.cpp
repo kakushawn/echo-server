@@ -5,7 +5,7 @@
 
 int main(int argc, char **argv)
 {
-    Server server(9002, 32, 128);
+    Server server(9002, 1024, 128);
 
     if (server.Init() < 0) {
         std::cout << "Failed to initialize server." << std::endl;
@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     if(argc==2) {
         num_workers = std::stoi(argv[1]);
     }
-    server.RunNonblocking(num_workers);
+    server.RunMultiThreaded(num_workers);
 
     return 0;
 }

@@ -29,6 +29,7 @@ void ThreadPool::Push(std::pair<int, uint32_t> task)
 
 void ThreadPool::Work()
 {
+    std::cout << "start working\n";
     while (true) {
         std::pair<int, uint32_t> task;
         {
@@ -37,13 +38,14 @@ void ThreadPool::Work()
                 return should_terminate || !tasks.empty();
             });
             if (should_terminate) {
-                return;
+                break;
             }
             task = tasks.front();
             tasks.pop();
         }
         runner(task.first, task.second);
     }
+    std::cout << "bye\n";
 }
 
 bool ThreadPool::Busy()
