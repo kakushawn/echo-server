@@ -2,9 +2,7 @@
 
 #include <iostream>
 
-ThreadPool::ThreadPool(uint32_t num_workers, std::function<void(int, uint32_t)> runner)
-    : num_workers(num_workers),
-      runner(runner)
+ThreadPool::ThreadPool(uint32_t num_workers) : num_workers(num_workers)
 {
     should_terminate = false;
 }
@@ -15,42 +13,36 @@ void ThreadPool::Start()
     for (uint32_t i = 0; i < num_workers; ++i) {
         workers[i] = std::thread(&ThreadPool::Work, this);
     }
-    std::cout << "Created " << num_workers << " workers in pool." << std::endl;
 }
 
-void ThreadPool::Push(std::pair<int, uint32_t> task)
+void ThreadPool::Push(std::function<void()> job)
 {
     {
         std::unique_lock<std::mutex> lock(queue_mutex);
-        tasks.push(task);
+        jobs.push(job);
     }
     mutex_condition.notify_one();
 }
 
 void ThreadPool::Work()
 {
-    std::cout << "start working\n";
+    std::cout << std::this_thread::get_id() << ": start working" << std::endl;
     while (true) {
-        std::pair<int, uint32_t> task;
+        std::function<void()> job;
         {
             std::unique_lock<std::mutex> lock(queue_mutex);
             mutex_condition.wait(lock, [this] {
-                return should_terminate || !tasks.empty();
+                return should_terminate || !jobs.empty();
             });
             if (should_terminate) {
                 break;
             }
-            task = tasks.front();
-            tasks.pop();
+            job = jobs.front();
+            jobs.pop();
         }
-        runner(task.first, task.second);
+        job();
     }
-    std::cout << "bye\n";
-}
-
-bool ThreadPool::Busy()
-{
-    return false;
+    std::cout << std::this_thread::get_id() << ": bye" << std::endl;
 }
 
 void ThreadPool::Stop()
