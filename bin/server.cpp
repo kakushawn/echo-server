@@ -5,7 +5,7 @@
 
 int main(int argc, char **argv)
 {
-    Server server(9002, 1024, 128);
+    Server server(9002, 1024, 128, 1024);
 
     if (server.Init() < 0) {
         std::cout << "Failed to initialize server." << std::endl;
