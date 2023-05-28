@@ -96,7 +96,10 @@ int SendMessage2(int sock_fd, const std::string &message, uint32_t &sending_size
         total_sent += sent;
         bytes_left -= sent;
     }
-    if (sending_size != total_sent) return -1;
+    if (sending_size != total_sent) {
+        perror("sending_size");
+        return -1;
+    }
     sending_size = total_sent;
     return 0;
 }
@@ -113,8 +116,8 @@ bool IsNonblocking(int sock_fd)
 
 int ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer_size)
 {
-    if(!IsNonblocking(sock_fd)) {
-        std::cout << "sock_fd: " << sock_fd << " is not non-blocking." << std::endl;
+    if (!IsNonblocking(sock_fd)) {
+        ErrorLog("IsNonblocking");
         return -1;
     }
 
@@ -123,7 +126,10 @@ int ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer
     while ((read(sock_fd, buffer, buffer_size)) > 0) {
         message += buffer;
     }
-
+    if (errno != EAGAIN) {
+        perror("read:");
+        return -1;
+    }
     return 0;
 }
 

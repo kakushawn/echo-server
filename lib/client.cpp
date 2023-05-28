@@ -18,7 +18,7 @@ int Client::Init()
 {
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd < 0) {
-        ErrorLog("socket creation");
+        perror("socket creation");
         return -1;
     }
 
@@ -27,7 +27,7 @@ int Client::Init()
         .sin_port = htons(port),
         .sin_addr = INADDR_ANY};
     if (connect(sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        ErrorLog("connet");
+        perror("connet");
         return -1;
     }
 
@@ -38,12 +38,12 @@ int Client::Init()
 int Client::Echo(const std::string &msg, std::string &echoed)
 {
     if (SendMessage(sock_fd, msg, buffer_size) < 0) {
-        ErrorLog("sending");
+        perror("sending");
         return -1;
     }
 
     if (ReceiveMessage(sock_fd, echoed, buffer_size) < 0) {
-        ErrorLog("receiving");
+        perror("receiving");
         return -1;
     }
 
@@ -55,7 +55,6 @@ int Client::EchoNonblocking(const std::string &msg, std::string &echoed)
     SetNonblocking(sock_fd);
     uint32_t size = msg.size();
     if (SendMessage2(sock_fd, msg, size) < 0) {
-        ErrorLog("SendMessage2");
         return -1;
     }
 
@@ -68,6 +67,7 @@ int Client::EchoNonblocking(const std::string &msg, std::string &echoed)
 
     if (echoed.size() != msg.size()) {
         ErrorLog("echoed size");
+        return -1;
     }
 
     return 0;

@@ -8,15 +8,19 @@
 #include <unistd.h>
 
 #include <csignal>
-#include <cstring>
 #include <iostream>
+#include <string>
 
 #include "common.h"
 #include "thread_pool.h"
 
-#define MAX_EVENTS 64
+static void SignalHandler(int signum)
+{
+    std::cout << "interruptted. signum: " << signum << std::endl;
+}
 
-void Respond(int sock_fd, uint32_t buffer_size)
+// Job event for echoing message
+void EchoEvent(int sock_fd, uint32_t buffer_size)
 {
     std::string received_message;
     ReceiveMessageNonblocking(sock_fd, received_message, buffer_size);
@@ -31,19 +35,35 @@ void Respond(int sock_fd, uint32_t buffer_size)
     }
 }
 
-static void SignalHandler(int signum)
+// Job event for accepting new connection.
+void ConnectionEvent(int sock_fd, int epoll_fd)
 {
-    std::cout << "interruptted. signum: " << signum << std::endl;
+    int sock_fd_client;
+    struct sockaddr_storage client_addr;
+    socklen_t client_addr_len = sizeof(client_addr);
+    while ((sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len)) > 0) {
+        if (sock_fd_client == -1) {
+            perror("accept");
+            break;
+        }
+        SetNonblocking(sock_fd_client);
+        if (EpollCtlAdd(epoll_fd, sock_fd_client, EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP) < 0) {
+            perror("epoll_ctl: conn_sock");
+            break;
+        }
+    }
 }
 
-Server::Server(uint32_t port, uint32_t buffer_size, uint32_t backlog)
+Server::Server(uint32_t port, uint32_t buffer_size, uint32_t backlog, uint32_t max_events)
     : port(port),
       buffer_size(buffer_size),
-      backlog(backlog)
+      backlog(backlog),
+      max_events(max_events)
 {
     std::cout << "port: " << port << std::endl;
     std::cout << "buffer_size: " << buffer_size << std::endl;
     std::cout << "backlog: " << backlog << std::endl;
+    std::cout << "max_events: " << max_events << std::endl;
 }
 
 int Server::Init()
@@ -95,7 +115,6 @@ void Server::Run()
     while (true) {
         struct sockaddr_storage client_addr;
         socklen_t client_addr_len = sizeof(client_addr);
-
         int sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len);
         if (sock_fd_client < 0) {
             ErrorLog("accepting");
@@ -120,11 +139,17 @@ void Server::Run()
     std::cout << "Server is closed." << std::endl;
 }
 
-void Server::RunMultiThreaded(int num_workers)
+void Server::RunMultiThreaded(int num_workers, int num_server_workers)
 {
     std::cout << "num_workers: " << num_workers << std::endl;
-    ThreadPool pool(num_workers, Respond);
+
+    ThreadPool pool(num_workers);
     pool.Start();
+    std::cout << "Created " << num_workers << " workers in pool." << std::endl;
+
+    ThreadPool pool_server(num_server_workers);
+    pool_server.Start();
+    std::cout << "Created " << num_server_workers << " workers in server pool." << std::endl;
 
     int epoll_fd = epoll_create1(0);
     if (epoll_fd == -1) {
@@ -136,9 +161,9 @@ void Server::RunMultiThreaded(int num_workers)
         perror("epoll_ctl: listen_sock");
         return;
     }
-    struct epoll_event events[MAX_EVENTS];
+    struct epoll_event events[max_events];
     while (true) {
-        int num_fds = epoll_wait(epoll_fd, events, MAX_EVENTS, 1000);
+        int num_fds = epoll_wait(epoll_fd, events, max_events, 1000);
         if (num_fds == -1) {
             perror("epoll_wait");
             break;
@@ -147,33 +172,19 @@ void Server::RunMultiThreaded(int num_workers)
         for (int n = 0; n < num_fds; ++n) {
             int fd = events[n].data.fd;
             if (events[n].events & (EPOLLRDHUP | EPOLLHUP)) {
-                // std::cout << "close fd: " << events[n].data.fd << std::endl;
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
                 close(fd);
                 continue;
             }
             if (fd == sock_fd) {
-                int sock_fd_client;
-                struct sockaddr_storage client_addr;
-                socklen_t client_addr_len = sizeof(client_addr);
-                while ((sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len)) > 0) {
-                    if (sock_fd_client == -1) {
-                        perror("accept");
-                        break;
-                    }
-                    SetNonblocking(sock_fd_client);
-                    if (EpollCtlAdd(epoll_fd, sock_fd_client, EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP) < 0) {
-                        perror("epoll_ctl: conn_sock");
-                        break;
-                    }
-                    // std::cout << "accepted fd: " << sock_fd_client << std::endl;
-                }
+                pool_server.Push(std::bind(ConnectionEvent, fd, epoll_fd));
             } else if (events[n].events & EPOLLIN) {
-                pool.Push(std::pair<int, uint32_t>(fd, buffer_size));
+                pool.Push(std::bind(EchoEvent, fd, buffer_size));
             }
         }
     }
     pool.Stop();
+    pool_server.Stop();
     close(epoll_fd);
     std::cout << "epoll_fd is closed." << std::endl;
 }
@@ -183,4 +194,3 @@ Server::~Server()
     close(sock_fd);
     std::cout << "sock_fd is closed." << std::endl;
 }
-
