@@ -59,7 +59,7 @@ int Client::EchoNonblocking(const std::string &msg, std::string &echoed)
     }
 
     do {
-        if(ReceiveMessageNonblocking(sock_fd, echoed, buffer_size)<0) {
+        if (ReceiveMessageNonblocking(sock_fd, echoed, buffer_size) < 0) {
             ErrorLog("ReceiveMessageNonblocking");
             return -1;
         }
