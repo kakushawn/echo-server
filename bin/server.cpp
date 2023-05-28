@@ -14,10 +14,14 @@ int main(int argc, char **argv)
 
     // server.Run();
     int num_workers = 1;
-    if(argc==2) {
+    int num_server_workers = 1;
+    if(argc>=2) {
         num_workers = std::stoi(argv[1]);
     }
-    server.RunMultiThreaded(num_workers);
+    if(argc>=3) {
+        num_server_workers = std::stoi(argv[2]);
+    }
+    server.RunMultiThreaded(num_workers, num_server_workers);
 
     return 0;
 }

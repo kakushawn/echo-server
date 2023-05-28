@@ -9,7 +9,7 @@
 int m = 1, n = 10;
 void run()
 {
-	Client client(9002, 32);
+	Client client(9002, 1024);
 	if (client.Init() < 0) {
 		std::cout << "Failed to initialize connection." << std::endl;
 	}

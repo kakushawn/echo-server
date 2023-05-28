@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv)
 {
-    Client client(9002, 32);
+    Client client(9002, 1024);
     if (client.Init() < 0) {
         std::cout << "Failed to initialize connection." << std::endl;
         return 1;
