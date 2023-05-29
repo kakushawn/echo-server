@@ -53,8 +53,7 @@ int Client::Echo(const std::string &msg, std::string &echoed)
 int Client::EchoNonblocking(const std::string &msg, std::string &echoed)
 {
     SetNonblocking(sock_fd);
-    uint32_t size = msg.size();
-    if (SendMessage2(sock_fd, msg, size) < 0) {
+    if (SendMessage2(sock_fd, msg) < 0) {
         return -1;
     }
 

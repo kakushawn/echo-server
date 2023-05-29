@@ -57,7 +57,6 @@ int ReceiveMessage(int sock_fd, std::string &message, uint32_t buffer_size)
 
 int SetNonblocking(int sock_fd)
 {
-    int result;
     int flags;
 
     flags = fcntl(sock_fd, F_GETFL, 0);
@@ -68,8 +67,7 @@ int SetNonblocking(int sock_fd)
 
     flags |= O_NONBLOCK;
 
-    result = fcntl(sock_fd, F_SETFL, flags);
-    return result;
+    return fcntl(sock_fd, F_SETFL, flags);
 }
 
 int EpollCtlAdd(int epfd, int fd, uint32_t events)
@@ -77,30 +75,29 @@ int EpollCtlAdd(int epfd, int fd, uint32_t events)
     struct epoll_event ev;
     ev.events = events;
     ev.data.fd = fd;
-    if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev) == -1) {
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev) < 0) {
         return -1;
     }
     return 0;
 }
 
-int SendMessage2(int sock_fd, const std::string &message, uint32_t &sending_size)
+int SendMessage2(int sock_fd, const std::string &message)
 {
     uint32_t total_sent = 0;
-    uint32_t bytes_left = sending_size;
+    uint32_t sending_size = message.size();
 
     while (total_sent < sending_size) {
-        int sent = write(sock_fd, message.substr(total_sent, bytes_left).c_str(), bytes_left);
+        uint32_t bytes_left = sending_size - total_sent;
+        int sent = write(sock_fd, message.substr(total_sent).c_str(), bytes_left);
         if (sent <= 0) {
             break;
         }
         total_sent += sent;
-        bytes_left -= sent;
     }
     if (sending_size != total_sent) {
-        perror("sending_size");
+        perror("sending size");
         return -1;
     }
-    sending_size = total_sent;
     return 0;
 }
 

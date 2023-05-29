@@ -28,8 +28,7 @@ void EchoEvent(int sock_fd, uint32_t buffer_size)
     if (received_message.size() == 0) {
         perror("ReceiveMessageNonblocking");
     } else {
-        uint32_t sending_size = received_message.size();
-        if (SendMessage2(sock_fd, received_message, sending_size) < 0) {
+        if (SendMessage2(sock_fd, received_message) < 0) {
             perror("SendMessage2");
         }
     }

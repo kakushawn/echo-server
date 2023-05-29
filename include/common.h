@@ -15,7 +15,10 @@ int SetNonblocking(int sock_fd);
 int EpollCtlAdd(int epfd, int fd, uint32_t events);
 
 // Send all message in one go. 
-int SendMessage2(int sock_fd, const std::string &message, uint32_t &length);
+int SendMessage2(int sock_fd, const std::string &message);
+
+// Check if fd is non-blocking.
+bool IsNonblocking(int sock_fd);
 
 // Nonblocking receive. sock_fd should be nonblocking
 int ReceiveMessageNonblocking(int sock_fd, std::string &message, uint32_t buffer_size);
