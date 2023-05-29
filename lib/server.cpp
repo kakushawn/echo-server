@@ -27,8 +27,8 @@ void EchoEvent(int sock_fd, uint32_t buffer_size)
         perror("ReceiveMessageNonblocking");
         return;
     }
-    if (SendMessage2(sock_fd, received_message) < 0) {
-        perror("SendMessage2");
+    if (SendMessage(sock_fd, received_message) < 0) {
+        perror("SendMessage");
     }
 }
 
@@ -104,36 +104,6 @@ int Server::Init()
     }
 
     return 0;
-}
-
-// A simple server run in a single thread
-void Server::Run()
-{
-    while (true) {
-        struct sockaddr_storage client_addr;
-        socklen_t client_addr_len = sizeof(client_addr);
-        int sock_fd_client = accept(sock_fd, (struct sockaddr *)&client_addr, &client_addr_len);
-        if (sock_fd_client < 0) {
-            ErrorLog("accepting");
-            break;
-        }
-
-        std::string received;
-        while (ReceiveMessage(sock_fd_client, received, buffer_size) == 0) {
-            std::cout << "received message size: " << received.size() << std::endl;
-
-            if (SendMessage(sock_fd_client, received, buffer_size) < 0) {
-                ErrorLog("sending");
-                break;
-            }
-            std::cout << "sent message. size: " << received.length() << std::endl;
-        }
-
-        close(sock_fd_client);
-        std::cout << "Connection is closed." << std::endl;
-    }
-    close(sock_fd);
-    std::cout << "Server is closed." << std::endl;
 }
 
 void Server::RunMultiThreaded(int num_workers, int num_server_workers)
