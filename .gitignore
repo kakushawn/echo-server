@@ -1,5 +1,4 @@
 *.out
 *.so
 *.o
-/bin/server
-/bin/client
+/bin/

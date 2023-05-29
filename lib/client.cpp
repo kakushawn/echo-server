@@ -11,15 +11,13 @@
 
 Client::Client(uint32_t port, uint32_t buffer_size)
     : port(port),
-      buffer_size(buffer_size)
-{
-}
+      buffer_size(buffer_size) {}
 
 int Client::Init()
 {
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (sock_fd < 0) {
-        ErrorLog("socket creation");
+        perror("socket creation");
         return -1;
     }
 
@@ -28,7 +26,7 @@ int Client::Init()
         .sin_port = htons(port),
         .sin_addr = INADDR_ANY};
     if (connect(sock_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        ErrorLog("connet");
+        perror("connet");
         return -1;
     }
 
@@ -36,20 +34,44 @@ int Client::Init()
 }
 
 // Send message over socket to server and show the echoed message.
-int Client::Echo(const std::string &msg)
+int Client::Echo(const std::string &msg, std::string &echoed)
 {
     if (SendMessage(sock_fd, msg, buffer_size) < 0) {
-        ErrorLog("sending");
+        perror("sending");
         return -1;
     }
 
-    std::string echoed;
     if (ReceiveMessage(sock_fd, echoed, buffer_size) < 0) {
-        ErrorLog("receiving");
+        perror("receiving");
         return -1;
     }
-    std::cout << "Message from server: " << echoed << std::endl;
 
-    close(sock_fd);
     return 0;
+}
+
+int Client::EchoNonblocking(const std::string &msg, std::string &echoed)
+{
+    SetNonblocking(sock_fd);
+    if (SendMessage2(sock_fd, msg) < 0) {
+        return -1;
+    }
+
+    do {
+        if (ReceiveMessageNonblocking(sock_fd, echoed, buffer_size) < 0) {
+            ErrorLog("ReceiveMessageNonblocking");
+            return -1;
+        }
+    } while (echoed.size() != msg.size() && errno == EAGAIN);
+
+    if (echoed.size() != msg.size()) {
+        ErrorLog("echoed size");
+        return -1;
+    }
+
+    return 0;
+}
+
+Client::~Client()
+{
+    close(sock_fd);
 }
