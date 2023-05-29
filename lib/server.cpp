@@ -168,14 +168,15 @@ void Server::RunMultiThreaded(int num_workers, int num_server_workers)
 
         for (int n = 0; n < num_fds; ++n) {
             int fd = events[n].data.fd;
-            if (events[n].events & (EPOLLRDHUP | EPOLLHUP)) {
+			uint32_t sock_event = events[n].events;
+            if (sock_event & (EPOLLRDHUP | EPOLLHUP)) {
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
                 close(fd);
                 continue;
             }
             if (fd == sock_fd) {
                 pool_server.Push(std::bind(ConnectionEvent, fd, epoll_fd));
-            } else if (events[n].events & EPOLLIN) {
+            } else if (sock_event & EPOLLIN) {
                 pool.Push(std::bind(EchoEvent, fd, buffer_size));
             }
         }
