@@ -5,7 +5,7 @@ BIN = ./bin/
 MAIN = ./main/
 LIB = ./lib/
 INCLUDE = ./include/
-CPPFLAGS = -Wall -Werror --std=c++17
+CPPFLAGS = -Wall -Werror --std=c++11
 
 all: main common
 
