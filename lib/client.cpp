@@ -33,26 +33,10 @@ int Client::Init()
     return 0;
 }
 
-// Send message over socket to server and show the echoed message.
-int Client::Echo(const std::string &msg, std::string &echoed)
-{
-    if (SendMessage(sock_fd, msg, buffer_size) < 0) {
-        perror("sending");
-        return -1;
-    }
-
-    if (ReceiveMessage(sock_fd, echoed, buffer_size) < 0) {
-        perror("receiving");
-        return -1;
-    }
-
-    return 0;
-}
-
 int Client::EchoNonblocking(const std::string &msg, std::string &echoed)
 {
     SetNonblocking(sock_fd);
-    if (SendMessage2(sock_fd, msg) < 0) {
+    if (SendMessage(sock_fd, msg) < 0) {
         return -1;
     }
 
