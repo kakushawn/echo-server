@@ -25,11 +25,11 @@ void EchoEvent(int sock_fd, uint32_t buffer_size)
     if (ReceiveMessageNonblocking(sock_fd, received_message, buffer_size) < 0 ||
         received_message.size() == 0) {
         perror("ReceiveMessageNonblocking");
-		return;
+        return;
     }
-	if (SendMessage2(sock_fd, received_message) < 0) {
-		perror("SendMessage2");
-	}
+    if (SendMessage2(sock_fd, received_message) < 0) {
+        perror("SendMessage2");
+    }
 }
 
 // Job event for accepting new connection.
@@ -168,7 +168,7 @@ void Server::RunMultiThreaded(int num_workers, int num_server_workers)
 
         for (int n = 0; n < num_fds; ++n) {
             int fd = events[n].data.fd;
-			uint32_t sock_event = events[n].events;
+            uint32_t sock_event = events[n].events;
             if (sock_event & (EPOLLRDHUP | EPOLLHUP)) {
                 epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
                 close(fd);
