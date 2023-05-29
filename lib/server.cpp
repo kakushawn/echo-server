@@ -9,7 +9,6 @@
 
 #include <csignal>
 #include <iostream>
-#include <string>
 
 #include "common.h"
 #include "thread_pool.h"
@@ -23,15 +22,14 @@ static void SignalHandler(int signum)
 void EchoEvent(int sock_fd, uint32_t buffer_size)
 {
     std::string received_message;
-    ReceiveMessageNonblocking(sock_fd, received_message, buffer_size);
-
-    if (received_message.size() == 0) {
+    if (ReceiveMessageNonblocking(sock_fd, received_message, buffer_size) < 0 ||
+        received_message.size() == 0) {
         perror("ReceiveMessageNonblocking");
-    } else {
-        if (SendMessage2(sock_fd, received_message) < 0) {
-            perror("SendMessage2");
-        }
+		return;
     }
+	if (SendMessage2(sock_fd, received_message) < 0) {
+		perror("SendMessage2");
+	}
 }
 
 // Job event for accepting new connection.
